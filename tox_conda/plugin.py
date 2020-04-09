@@ -1,10 +1,10 @@
 import os
 import re
 import types
-import yaml
 
 import pluggy
 import py.path
+import yaml
 
 import tox.venv
 from tox.config import DepConfig, DepOption
@@ -113,8 +113,8 @@ def tox_testenv_create(venv, action):
     args = [conda_exe, "create", "--yes", "-p", envdir]
 
     if venv.envconfig.conda_env_file is not None:
-        conda_env_dict = yaml.safe_load(open(venv.envconfig.conda_env_file))
-        conda_channels = conda_env_dict['channels']
+        conda_env_dict = conda_env_file_parse(venv.envconfig.conda_env_file)
+        conda_channels = conda_env_dict["conda_channels"]
     else:
         conda_channels = venv.envconfig.conda_channels
 
@@ -133,8 +133,8 @@ def install_conda_deps(venv, action, basepath, envdir):
     # Account for the fact that we have a list of DepOptions
     if venv.envconfig.conda_env_file is not None:
         conda_env_dict = conda_env_file_parse(venv.envconfig.conda_env_file)
-        conda_deps = conda_env_dict['conda_deps']
-        conda_channels = conda_env_dict['conda_channels']
+        conda_deps = conda_env_dict["conda_deps"]
+        conda_channels = conda_env_dict["conda_channels"]
     else:
         conda_deps = [str(dep.name) for dep in venv.envconfig.conda_deps]
         conda_channels = venv.envconfig.conda_channels
@@ -155,13 +155,10 @@ def install_conda_deps(venv, action, basepath, envdir):
 
 def conda_env_file_parse(env_file_path):
     conda_env_dict = yaml.safe_load(open(env_file_path))
-    conda_deps = [dep for dep in conda_env_dict['dependencies'][:5]]
-    conda_channels = conda_env_dict['channels']
+    conda_deps = [dep for dep in conda_env_dict["dependencies"][:5]]
+    conda_channels = conda_env_dict["channels"]
 
-    conda_env_parsed = {
-        'conda_deps': conda_deps,
-        'conda_channels': conda_channels,
-    }
+    conda_env_parsed = {"conda_deps": conda_deps, "conda_channels": conda_channels}
 
     return conda_env_parsed
 
@@ -172,8 +169,8 @@ def tox_testenv_install_deps(venv, action):
     envdir = venv.envconfig.envdir
     # Save for later : we will need it for the config file
     import copy
-    saved_deps = copy.deepcopy(venv.envconfig.deps)
 
+    saved_deps = copy.deepcopy(venv.envconfig.deps)
 
     num_conda_deps = len(venv.envconfig.conda_deps)
     if num_conda_deps > 0:
