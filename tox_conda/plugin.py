@@ -1,6 +1,7 @@
 import os
 import re
 import types
+import yaml
 
 import pluggy
 import py.path
@@ -47,6 +48,9 @@ def tox_addoption(parser):
         name="conda_channels", type="line-list", help="each line specifies a conda channel"
     )
 
+    parser.add_testenv_attribute(
+        name="conda_env_file", type="string", help="conda environment yaml file"
+    )
 
 @hookimpl
 def tox_configure(config):
@@ -118,7 +122,11 @@ def tox_testenv_create(venv, action):
 def install_conda_deps(venv, action, basepath, envdir):
     conda_exe = venv.envconfig.conda_exe
     # Account for the fact that we have a list of DepOptions
-    conda_deps = [str(dep.name) for dep in venv.envconfig.conda_deps]
+    if venv.envconfig.conda_environment_file is not None:
+         conda_env_dict = yaml.safe_load(open(venv.envconfig.conda_environment_file))
+         conda_deps = [dep for dep in conda_env_dict['dependencies'][:-1]]
+     else:
+         conda_deps = [str(dep.name) for dep in venv.envconfig.conda_deps]
 
     action.setactivity("installcondadeps", ", ".join(conda_deps))
 
