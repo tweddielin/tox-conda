@@ -134,7 +134,7 @@ def install_conda_deps(venv, action, basepath, envdir):
     if venv.envconfig.conda_env_file is not None:
         conda_env_dict = conda_env_file_parse(venv.envconfig.conda_env_file)
         conda_deps = conda_env_dict['conda_deps']
-        conda_channels = conda_env_dict['channels']
+        conda_channels = conda_env_dict['conda_channels']
     else:
         conda_deps = [str(dep.name) for dep in venv.envconfig.conda_deps]
         conda_channels = venv.envconfig.conda_channels
