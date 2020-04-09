@@ -171,8 +171,12 @@ def tox_testenv_install_deps(venv, action):
     import copy
 
     saved_deps = copy.deepcopy(venv.envconfig.deps)
-
-    num_conda_deps = len(venv.envconfig.conda_deps)
+    if venv.envconfig.conda_env_file is not None:
+        conda_env_dict = conda_env_file_parse(venv.envconfig.conda_env_file)
+        conda_deps = conda_env_dict["conda_deps"]
+        num_conda_deps = len(conda_deps)
+    else:
+        num_conda_deps = len(venv.envconfig.conda_deps)
     if num_conda_deps > 0:
         install_conda_deps(venv, action, basepath, envdir)
         # Account for the fact that we added the conda_deps to the deps list in
