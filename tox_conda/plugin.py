@@ -125,7 +125,7 @@ def install_conda_deps(venv, action, basepath, envdir):
     if venv.envconfig.conda_environment_file is not None:
         conda_env_dict = yaml.safe_load(open(venv.envconfig.conda_environment_file))
         conda_deps = [dep for dep in conda_env_dict['dependencies'][:-1]]
-     else:
+    else:
          conda_deps = [str(dep.name) for dep in venv.envconfig.conda_deps]
 
     action.setactivity("installcondadeps", ", ".join(conda_deps))
