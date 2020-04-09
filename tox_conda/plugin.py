@@ -52,6 +52,7 @@ def tox_addoption(parser):
         name="conda_env_file", type="string", help="conda environment yaml file"
     )
 
+
 @hookimpl
 def tox_configure(config):
     # This is a pretty cheesy workaround. It allows tox to consider changes to
@@ -59,6 +60,7 @@ def tox_configure(config):
     # needs to be updated before being used
     for _, envconfig in config.envconfigs.items():
         conda_deps = [DepConfig(str(name)) for name in envconfig.conda_deps]
+
         envconfig.deps.extend(conda_deps)
 
 
@@ -109,7 +111,14 @@ def tox_testenv_create(venv, action):
     venv._venv_lookup = types.MethodType(venv_lookup, venv)
 
     args = [conda_exe, "create", "--yes", "-p", envdir]
-    for channel in venv.envconfig.conda_channels:
+
+    if venv.envconfig.conda_env_file is not None:
+        conda_env_dict = yaml.safe_load(open(venv.envconfig.conda_env_file))
+        conda_channels = conda_env_dict['channels']
+    else:
+        conda_channels = venv.envconfig.conda_channels
+
+    for channel in conda_channels:
         args += ["--channel", channel]
     args += [python]
     venv._pcall(args, venv=False, action=action, cwd=basepath)
@@ -123,15 +132,17 @@ def install_conda_deps(venv, action, basepath, envdir):
     conda_exe = venv.envconfig.conda_exe
     # Account for the fact that we have a list of DepOptions
     if venv.envconfig.conda_env_file is not None:
-        conda_env_dict = yaml.safe_load(open(venv.envconfig.conda_env_file))
-        conda_deps = [dep for dep in conda_env_dict['dependencies'][:-1]]
+        conda_env_dict = conda_env_file_parse(venv.envconfig.conda_env_file)
+        conda_deps = conda_env_dict['conda_deps']
+        conda_channels = conda_env_dict['channels']
     else:
         conda_deps = [str(dep.name) for dep in venv.envconfig.conda_deps]
+        conda_channels = venv.envconfig.conda_channels
 
     action.setactivity("installcondadeps", ", ".join(conda_deps))
 
     args = [conda_exe, "install", "--yes", "-p", envdir]
-    for channel in venv.envconfig.conda_channels:
+    for channel in conda_channels:
         args += ["--channel", channel]
     # We include the python version in the conda requirements in order to make
     # sure that none of the other conda requirements inadvertently downgrade
@@ -142,6 +153,19 @@ def install_conda_deps(venv, action, basepath, envdir):
     venv._pcall(args, venv=False, action=action, cwd=basepath)
 
 
+def conda_env_file_parse(env_file_path):
+    conda_env_dict = yaml.safe_load(open(env_file_path))
+    conda_deps = [dep for dep in conda_env_dict['dependencies'][:5]]
+    conda_channels = conda_env_dict['channels']
+
+    conda_env_parsed = {
+        'conda_deps': conda_deps,
+        'conda_channels': conda_channels,
+    }
+
+    return conda_env_parsed
+
+
 @hookimpl
 def tox_testenv_install_deps(venv, action):
     basepath = venv.path.dirpath()
@@ -149,6 +173,7 @@ def tox_testenv_install_deps(venv, action):
     # Save for later : we will need it for the config file
     import copy
     saved_deps = copy.deepcopy(venv.envconfig.deps)
+
 
     num_conda_deps = len(venv.envconfig.conda_deps)
     if num_conda_deps > 0:
