@@ -22,6 +22,9 @@ setup(
     maintainer="Oliver Bestwalter",
     maintainer_email="oliver@bestwalter.de",
     url="https://github.com/tweddielin/tox-conda",
+    install_requires=[
+        "PyYAML >= 3.11",
+    ]
     packages=find_packages(exclude=["tests"]),
     python_requires=">=3.3",
     install_requires=["tox>=3.8.1"],
