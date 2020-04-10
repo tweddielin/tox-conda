@@ -21,7 +21,7 @@ setup(
     author_email="ddavella@stsci.edu",
     maintainer="Oliver Bestwalter",
     maintainer_email="oliver@bestwalter.de",
-    url="https://github.com/tox-dev/tox-conda",
+    url="https://github.com/tweddielin/tox-conda",
     packages=find_packages(exclude=["tests"]),
     python_requires=">=3.3",
     install_requires=["tox>=3.8.1"],
